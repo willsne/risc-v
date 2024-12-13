@@ -31,12 +31,12 @@ architecture Behavioral of regfile is
 
 begin
 
-    rd1 <= dataRegsQ(to_integer(unsigned(a1)))
-    rd2 <= dataRegsQ(to_integer(unsigned(a2)))
+    rd1 <= dataRegsQ(to_integer(unsigned(a1)));
+    rd2 <= dataRegsQ(to_integer(unsigned(a2)));
 
     process(clk, rst_l, we)
     begin
-        if rst = '1' and rising_edge(clk) then
+        if rst_l = '0' and rising_edge(clk) then
             dataRegsD <= (others => (others => '0'));
         elsif rising_edge(clk)
             if we3 = '1'
