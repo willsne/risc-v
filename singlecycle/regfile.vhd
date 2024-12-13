@@ -15,7 +15,7 @@ entity regfile is
         a3 : in std_logic;
       	we3 : in std_logic;
         addr : in std_logic_vector(addrWIDTH - 1 downto 0);
-        wd3 : out std_logic_vector(dataWIDTH - 1 downto 0);
+        wd3 : in std_logic_vector(dataWIDTH - 1 downto 0);
         rd1 : out std_logic_vector(dataWIDTH - 1 downto 0);
         rd2 : out std_logic_vector(dataWIDTH - 1 downto 0);
     );
@@ -24,24 +24,22 @@ end regfile;
 architecture Behavioral of regfile is
 
 	type register_array is array (0 to 31) of std_logic_vector(dataWIDTH - 1 downto 0);
-	signal dataRegsD : register_array := (others => (others => '0'));
-    signal dataRegsQ : register_array := (others => (others => '0'));
+	signal dataRegs : register_array := (others => (others => '0'));
 
 
 begin
 
-    rd1 <= dataRegsQ(to_integer(unsigned(a1)));
-    rd2 <= dataRegsQ(to_integer(unsigned(a2)));
+    rd1 <= dataRegs(to_integer(unsigned(a1)));
+    rd2 <= dataRegs(to_integer(unsigned(a2)));
 
-    process(clk, rst_l, we)
+    process(clk, rst_l, we3)
     begin
         if rst_l = '0' and rising_edge(clk) then
-            dataRegsD <= (others => (others => '0'));
+            dataRegs <= (others => (others => '0'));
         elsif rising_edge(clk)
             if we3 = '1'
                 dataRegsD(to_integer(unsigned(a3))) <= wd3 others => dataRegsQ;
             end if;
-            dataRegsQ <= dataRegsD;
         end if;
     end process; 
 
