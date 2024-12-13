@@ -38,7 +38,7 @@ begin
             dataRegs <= (others => (others => '0'));
         elsif rising_edge(clk)
             if we3 = '1'
-                dataRegsD(to_integer(unsigned(a3))) <= wd3 others => dataRegsQ;
+                dataRegs(to_integer(unsigned(a3))) <= wd3 others => dataRegsQ;
             end if;
         end if;
     end process; 
