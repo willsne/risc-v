@@ -50,7 +50,7 @@ begin
     -- Process with if-else
     process(clk, rst)
     begin
-        if rst = '1' then
+        if rst = '1' and rising_edge(clk) then
             internal_signal <= (others => '0');
             state <= IDLE;
             registers <= (others => (others => '0'));

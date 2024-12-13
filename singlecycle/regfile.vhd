@@ -16,7 +16,7 @@ entity regfile is
         a3 : in std_logic;
       	we3 : in std_logic;
         addr : in std_logic_vector(addrWIDTH - 1 downto 0);
-        wd : out std_logic_vector(dataWIDTH - 1 downto 0);
+        wd3 : out std_logic_vector(dataWIDTH - 1 downto 0);
         rd1 : out std_logic_vector(dataWIDTH - 1 downto 0);
         rd2 : out std_logic_vector(dataWIDTH - 1 downto 0);
     );
@@ -36,10 +36,13 @@ begin
 
     process(clk, rst_l, we)
     begin
-        if rst_l = '1' then
+        if rst = '1' and rising_edge(clk) then
             dataRegsD <= (others => (others => '0'));
-        elsif we3 = '1'
-            dataRegsD(to_integer(unsigned(a3))) <= wd;
+        elsif rising_edge(clk)
+            if we3 = '1'
+                dataRegsD(to_integer(unsigned(a3))) <= wd3 others => dataRegsQ;
+            end if;
+            dataRegsQ <= dataRegsD;
         end if;
     end process; 
 
