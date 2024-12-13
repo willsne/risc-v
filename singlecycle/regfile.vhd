@@ -9,6 +9,10 @@ entity regfile is
        	dataWIDTH : INTEGER := 32
     );
     port (
+        clk : in std_logic;
+        a1 : in std_logic;
+        a2 : in std_logic;
+        a3 : in std_logic;
         rst_l    : in std_logic;
       	we : in std_logic;
         addr : in std_logic_vector(addrWIDTH - 1 downto 0);
