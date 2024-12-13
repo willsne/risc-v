@@ -7,7 +7,7 @@ entity datamemory is
     generic (
         addrWIDTH : INTEGER := 5
        	dataWIDTH : INTEGER := 32
-        imemLENGTH : INTEGER := 65536
+        dmemLENGTH : INTEGER := 65536
     );
     port (
         rst_l    : in std_logic;
