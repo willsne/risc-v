@@ -10,10 +10,10 @@ entity regfile is
     );
     port (
         clk : in std_logic;
+        rst_l    : in std_logic;
         a1 : in std_logic;
         a2 : in std_logic;
         a3 : in std_logic;
-        rst_l    : in std_logic;
       	we3 : in std_logic;
         addr : in std_logic_vector(addrWIDTH - 1 downto 0);
         wd : out std_logic_vector(dataWIDTH - 1 downto 0);
@@ -34,13 +34,12 @@ begin
     rd1 <= dataRegsQ(to_integer(unsigned(a1)))
     rd2 <= dataRegsQ(to_integer(unsigned(a2)))
 
-
-    process(rst_l, we)
+    process(clk, rst_l, we)
     begin
         if rst_l = '1' then
-            dataRegsD(to_integer(unsigned(addr))) <= (others => (others => '0'));
-        elsif we = '1'
-            dataRegs(to_integer(unsigned(addr))) <= wd;
+            dataRegsD <= (others => (others => '0'));
+        elsif we3 = '1'
+            dataRegsD(to_integer(unsigned(a3))) <= wd;
         end if;
     end process; 
 
