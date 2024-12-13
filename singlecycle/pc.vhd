@@ -27,10 +27,7 @@ begin
 
 
     ---internal signals
-    pcPlus4 <= pc + '4';
-
-
-
+    pcPlus4 <= pc + 4;
 
     process(clk, rst_l)
     begin
@@ -43,6 +40,8 @@ begin
                         pc <= pcPlus4;
                     when '1'
                         pc <= pcTarget;
+                    when others =>
+                        pc <= (others => '0'); -- Optional default case
                 end case;
             end if;
         end if;
@@ -50,5 +49,5 @@ begin
 
     ---output
     pcNext <= pc;
-    
+
 end Behavioral;
