@@ -32,7 +32,7 @@ begin
         if rst_l = '0' then
             instrMem <= (others => (others => '0'));
         elsif we = '1'
-            instrRegs(addr) <= wd;
+            instrMem(addr) <= wd;
         end if;
     end process; 
 
