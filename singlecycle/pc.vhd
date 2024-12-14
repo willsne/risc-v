@@ -24,7 +24,6 @@ architecture Behavioral of pc is
 
 begin
 
-
     ---internal signals
     pcPlus4 <= pc + 4;
 
@@ -36,9 +35,9 @@ begin
                 pcNext <= (others => '0');
             else
                 case pcSrc is
-                    when '0'
+                    when '0' => 
                         pc <= pcPlus4;
-                    when '1'
+                    when '1' => 
                         pc <= pcTarget;
                     when others =>
                         pc <= (others => '0'); -- Optional default case

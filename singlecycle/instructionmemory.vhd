@@ -5,7 +5,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity instructionmemory is
     generic (
-        addrWIDTH : INTEGER := 5
+        addrWIDTH : INTEGER := 32
        	dataWIDTH : INTEGER := 32
         imemLENGTH : INTEGER := 65536
     );
@@ -21,8 +21,7 @@ end instructionmemory;
 architecture Behavioral of instructionmemory is
 
 	type mem_array is array (0 to imemLENGTH - 1) of unsigned(dataWIDTH - 1 downto 0);
-	signal instrMem : register_array; /* := (others => (others => '0')); */
-
+	signal instrMem : mem_array;
 begin
 
     rd <= instrMem(addr);
