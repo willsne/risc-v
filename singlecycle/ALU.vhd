@@ -33,13 +33,13 @@ begin
             when '000' => --add
                 ALUResult <= adderResult;
             when '001' => --subtract
-                ALUResult <= adderResult;
+                ALUResult <= (others => '0');
             when '010' => --and
-                ALUResult <= adderResult;
+                ALUResult <= (others => '0');
             when '011' => --or
-                ALUResult <= adderResult;
+                ALUResult <= (others => '0');
             when others => 
-                ALUResult <= (others => '0'); -- Set ALUResult to all 0s
+                ALUResult <= (others => '0');
         end case;
     end process;
 
