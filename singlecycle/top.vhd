@@ -1,77 +1,207 @@
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
 
-entity TopModule is
+entity top is
+    generic (
+        regAddrWIDTH : INTEGER := 5
+        instAddrWIDTH : INTEGER := 16
+       	dataWIDTH : INTEGER := 32
+
+    );
     port (
         clk         : in  std_logic;      -- Clock signal
-        reset       : in  std_logic;      -- Reset signal
+        rst_l       : in  std_logic;      -- rst_l signal
     );
-end TopModule;
+end top;
 
 
-architecture Structural of TopModule is
+architecture Structural of top is
 
-    signal pc          : integer range 0 to 31 := 0;   -- Program counter
-    signal instr       : std_logic_vector(31 downto 0);
-    signal alu_result  : std_logic_vector(31 downto 0);
-    signal read_data   : std_logic_vector(31 downto 0);
-    signal wd          : std_logic_vector(31 downto 0);
-    signal rs1_addr    : std_logic_vector(4 downto 0);
-    signal rs2_addr    : std_logic_vector(4 downto 0);
-    signal result_src  : std_logic := '0';  -- MUX selector
-    signal write_enable : std_logic := '1'; -- Write enable for RegFile
+    --constants
+    signal four: STD_LOGIC_VECTOR(31 downto 0) := X"0004";
+
+    --all signals on the right in an instantiation must be declared
+    --sorted by module output
+
+    --instructionmemory
+    signal rd : std_logic_vector(dataWIDTH - 1 downto 0);
+    --datamemory
+    signal readData : std_logic_vector(dataWIDTH - 1 downto 0);
+    --regfile
+    signal rd1_out : std_logic_vector(dataWIDTH - 1 downto 0);
+    signal rd2_out : std_logic_vector(dataWIDTH - 1 downto 0);
+    --control
+    signal PCSrc : std_logic;
+    signal ResultSrc : std_logic;
+    signal memWrite : std_logic;
+    signal ALUControl : std_logic_vector(2 downto 0);
+    signal ALUSrc : std_logic;
+    signal immSrc : std_logic;
+    signal regWrite : std_logic;
+    --ALU
+    signal zeroFlag : std_logic;
+    signal ALUResult : std_logic_vector(dataWIDTH - 1 downto 0);
+    --immextender
+    signal immExt : std_logic_vector(dataWIDTH - 1 downto 0);
+    ---PC
+    signal PC : std_logic_vector(instAddrWIDTH - 1 downto 0);
+    --srcB_mux
+    signal srcB : std_logic_vector(dataWIDTH - 1 downto 0);
+    --PCNext_mux
+    signal PCNext : std_logic_vector(instAddrWIDTH - 1 downto 0);
+    --result_mux
+    signal result : std_logic_vector(dataWIDTH - 1 downto 0);
+    --PCPlus4_adder
+    signal PCPlus4 : std_logic_vector(instAddrWIDTH - 1 downto 0);
+    --PCTarget_adder
+    signal PCTarget : std_logic_vector(instAddrWIDTH - 1 downto 0);
+
 begin
-    -- Instantiate the ALU module
-    ALU_inst : entity work.ALU
-        port map (
-            -- ALU ports
-            aluresult => alu_result,
-            -- other ports...
-        );
+    
+    instructionmemory : entity work.instructionmemory
+    port map (
+        rst_l => rst_l,
+        we => open, --not writing yet
+        addr => PC,
+        wd => open,
+        --
+        rd => instr --mapping output to internal signal instr
+    );
 
-    -- Instantiate the Data Memory module
-    DataMemory_inst : entity work.DataMemory
-        port map (
-            -- Data memory ports
-            readdata => rd,
-            -- other ports...
-        );
+    datamemory : entity work.datamemory
+    port map (
+        rst_l => rst_l,
+        we => memWrite,
+        addr => ALUResult,
+        wd => rd2_out,
+        --
+        rd => readData --mapping output to internal signal readData
+    );
 
-    -- Instantiate the RegFile module
-    RegFile_inst : entity work.RegFile
-        port map (
-            wd => write_data,
-            -- other ports...
-        );
+    regfile : entity work.regfile
+    port map (
+        clk => clk,
+        rst_l => rst_l,
+        a1 => instr(19 downto 15),
+        a2 => instr(24 downto 20),
+        a3 => instr(11 downto 7), --mapping input to internal signal instr
+        we3 => regWrite,
+        wd3 => result,
+        --
+        rd1 => rd1_out,
+        rd2 => rd2_out
+    );
 
-    -- Multiplexer to decide write data
-    process(all)
-    begin
-        if resultsrc = '0' then
-            write_data <= alu_result;
-        else
-            write_data <= data_memory;
-        end if;
-    end process;
+    control : entity work.control
+    port map (
+        op => instr(6 downto 0),
+        funct3 => instr(14 downto 12),
+        funct7_bit => instr(30),
+        --
+        extType => extType,
+        pcSrc => PCSrc,
+        resultSrc => ResultSrc,
+        memWrite => memWrite,
+        ALUControl => ALUControl,
+        ALUSrc => ALUSrc,
+        ImmSrc => ImmSrc,
+        regWrite => regWrite
+    );
+
+    ALU : entity work.ALU
+    port map (
+        srcA => rd1_out,
+        srcB => srcB,
+        --
+        ALUResult => ALUResult,
+        zeroFlag => zeroFlag,
+    );
+
+    immextender : entity work.immextender
+    port map (
+        extType => extType,
+        immSrc => immSrc,
+        instr => instr,
+        --
+        immExt => immExt
+    );
+
+    pc : entity work.pc
+    port map (
+        clk => clk,
+        rst_l => rst_l,
+        PCNext => PCNext,
+        --
+        PC => PC
+    );
+
+    ---MUXes
+    srcB_mux : entity work.mux2
+    port map (
+        d0 => rd2_out,
+        d1 => ImmExt,
+        s => ALUSrc,
+        --
+        y => srcB
+    );
+
+    PCNext_mux : entity work.mux2
+    generic map (
+        dataWIDTH => 16
+    )
+    port map (
+        d0 => PCPlus4,
+        d1 => PCTarget,
+        s => PCSrc,
+        --
+        y => PCNext
+    );
+
+    result_mux : entity work.mux2
+    port map (
+        d0 => ALUResult,
+        d1 => readData,
+        s => resultSrc,
+        --
+        y => result
+    );
+
+    ---Adders
+    PCPlus4_adder : entity work.adder
+    generic map (
+        dInWIDTH => 16
+        dOutWIDTH => 16
+    )
+    port map (
+        a => PC,
+        b => four,
+        --
+        y => PCPlus4
+    );
+
+    PCTarget_adder : entity work.adder
+    generic map (
+        dInWIDTH => 16
+        dOutWIDTH => 16
+    )
+    port map (
+        a => PC,
+        b => ImmExt,
+        --
+        y => PCTarget
+    );
 
 end Structural;
 
 
 begin
 
---map instructionmemory output to datamemory input
-as1 <= instr(19:15);
-as2 <= instr(24:20);
-
---map regfile module wd input to either aluresult output of alu module or datamemory module readdata output depending on resultsrc from control module
-    -- Multiplexer to select wd input for regfile
-    process(all)
+    process(clk)
     begin
-        if resultSrc = '0' then
-            wd3 <= aluresult;  -- Select ALU result
-        else
-            wd3 <= rd;   -- Select data memory output
+        if rising_edge(clk) then
+            if rst_l = '0' then
+                PC <= (others => '0');
+            end if;
         end if;
     end process;
 

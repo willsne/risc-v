@@ -10,28 +10,37 @@ entity ALU is
         dmemLENGTH : INTEGER := 65536
     );
     port (
-        rst_l    : in std_logic;
-      	we : in std_logic;
-        addr : in unsigned(addrWIDTH - 1 downto 0);
-        wd : out unsigned(dataWIDTH - 1 downto 0);
-        rd : out unsigned(dataWIDTH - 1 downto 0);
+        ALUControl : in std_logic_vector(2 downto 0);
+        srcA : in std_logic_vector(dataWIDTH - 1 downto 0);
+        srcB : in std_logic_vector(dataWIDTH - 1 downto 0);
+        zeroFlag : out std_logic;
+        ALUResult : out std_logic_vector(dataWIDTH - 1 downto 0);
     );
 end ALU;
 
 architecture Behavioral of ALU is
 
+    signal adderResult : std_logic_vector(dataWIDTH - 1 downto 0);
 
 begin
 
-    rd <= dataMem(addr);
+    adder : entity work.adder
+        port map (srcA, srcB, adderResult);
 
-    process(rst_l, we)
+    process(ALUControl)
     begin
-        if rst_l = '0' then
-            dataMem <= (others => (others => '0'));
-        elsif we = '1'
-            dataMem(addr) <= wd;
-        end if;
-    end process; 
+        case ALUControl is
+            when '000' => --add
+                ALUResult <= adderResult;
+            when '001' => --subtract
+                ALUResult <= adderResult;
+            when '010' => --and
+                ALUResult <= adderResult;
+            when '011' => --or
+                ALUResult <= adderResult;
+            when others => 
+                ALUResult <= (others => '0'); -- Set ALUResult to all 0s
+        end case;
+    end process;
 
 end Behavioral;
