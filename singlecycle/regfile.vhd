@@ -4,7 +4,7 @@ use IEEE.NUMERIC_STD.ALL; -- Use numeric_std for arithmetic
 
 entity regfile is
     generic (
-        addrWIDTH : INTEGER := 5
+        addrWIDTH : INTEGER := 5;
        	dataWIDTH : INTEGER := 32
     );
     port (
@@ -26,16 +26,17 @@ architecture Behavioral of regfile is
 	signal dataRegs : register_array := (others => (others => '0'));
 
 begin
-    process(clk, rst_l, we3)
+
+    rd1 <= dataRegs(to_integer(unsigned(a1)));
+    rd2 <= dataRegs(to_integer(unsigned(a2)));
+                
+    process(clk, rst_l)
     begin
-        if rising_edge(clk) and rst_l = '0' then
+        if rising_edge(clk) then
+            if rst_l = '0' then
                 dataRegs <= (others => (others => '0'));
-        elsif rising_edge(clk) then
-            if we3 = '1' then 
-                dataRegs(a3) <= wd3;
-            elsif we3 = '0' then
-                rd1 <= dataregs(a1);
-                rd2 <= dataregs(a2);
+            elsif we3 = '1' then 
+                dataRegs(to_integer(unsigned(a3))) <= wd3;
             end if;
         end if;
     end process; 

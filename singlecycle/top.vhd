@@ -3,28 +3,28 @@ use ieee.std_logic_1164.all;
 
 entity top is
     generic (
-        regAddrWIDTH : INTEGER := 5
-        instAddrWIDTH : INTEGER := 16
+        regAddrWIDTH : INTEGER := 5;
+        instAddrWIDTH : INTEGER := 16;
        	dataWIDTH : INTEGER := 32
 
     );
     port (
-        clk         : in  std_logic;      -- Clock signal
-        rst_l       : in  std_logic;      -- rst_l signal
+        clk         : in  std_logic;
+        rst_l       : in  std_logic
     );
 end top;
 
 
-architecture Structural of top is
+architecture Behavioral of top is
 
     --constants
-    signal four: STD_LOGIC_VECTOR(31 downto 0) := X"0004";
+    signal four: STD_LOGIC_VECTOR(dataWIDTH - 1 downto 0) := X"00000004";
 
     --all signals on the right in an instantiation must be declared
     --sorted by module output
 
     --instructionmemory
-    signal rd : std_logic_vector(dataWIDTH - 1 downto 0);
+    signal instr : std_logic_vector(dataWIDTH - 1 downto 0);
     --datamemory
     signal readData : std_logic_vector(dataWIDTH - 1 downto 0);
     --regfile
@@ -34,12 +34,13 @@ architecture Structural of top is
     signal PCSrc : std_logic;
     signal ResultSrc : std_logic;
     signal memWrite : std_logic;
+    signal extType : std_logic;
     signal ALUControl : std_logic_vector(2 downto 0);
     signal ALUSrc : std_logic;
-    signal immSrc : std_logic;
+    signal zeroFlag : std_logic;
+    signal immSrc : std_logic_vector(1 downto 0);
     signal regWrite : std_logic;
     --ALU
-    signal zeroFlag : std_logic;
     signal ALUResult : std_logic_vector(dataWIDTH - 1 downto 0);
     --immextender
     signal immExt : std_logic_vector(dataWIDTH - 1 downto 0);
@@ -48,31 +49,37 @@ architecture Structural of top is
     --srcB_mux
     signal srcB : std_logic_vector(dataWIDTH - 1 downto 0);
     --PCNext_mux
-    signal PCNext : std_logic_vector(instAddrWIDTH - 1 downto 0);
+    signal PCNext : std_logic_vector(dataWIDTH - 1 downto 0);
     --result_mux
     signal result : std_logic_vector(dataWIDTH - 1 downto 0);
     --PCPlus4_adder
-    signal PCPlus4 : std_logic_vector(instAddrWIDTH - 1 downto 0);
+    signal PCPlus4 : std_logic_vector(dataWIDTH - 1 downto 0);
     --PCTarget_adder
-    signal PCTarget : std_logic_vector(instAddrWIDTH - 1 downto 0);
+    signal PCTarget : std_logic_vector(dataWIDTH - 1 downto 0);
+    
+    signal PC_with_prefix : std_logic_vector(31 downto 0);
+
 
 begin
-    
+    PC_with_prefix <= X"0000" & PC; -- Assuming PC is 16 bits
+
     instructionmemory : entity work.instructionmemory
     port map (
+        clk => clk,
         rst_l => rst_l,
-        we => open, --not writing yet
+        we => memWrite, --not writing yet
         addr => PC,
-        wd => open,
+        wd => X"00000000",
         --
         rd => instr --mapping output to internal signal instr
     );
 
     datamemory : entity work.datamemory
     port map (
+        clk => clk,
         rst_l => rst_l,
         we => memWrite,
-        addr => ALUResult,
+        addr => ALUResult(15 downto 0),
         wd => rd2_out,
         --
         rd => readData --mapping output to internal signal readData
@@ -97,6 +104,7 @@ begin
         op => instr(6 downto 0),
         funct3 => instr(14 downto 12),
         funct7_bit => instr(30),
+        zeroFlag => zeroFlag,
         --
         extType => extType,
         pcSrc => PCSrc,
@@ -112,9 +120,10 @@ begin
     port map (
         srcA => rd1_out,
         srcB => srcB,
+        ALUControl => ALUControl,
         --
         ALUResult => ALUResult,
-        zeroFlag => zeroFlag,
+        zeroFlag => zeroFlag
     );
 
     immextender : entity work.immextender
@@ -126,7 +135,7 @@ begin
         immExt => immExt
     );
 
-    pc : entity work.pc
+    programcounter : entity work.programcounter
     port map (
         clk => clk,
         rst_l => rst_l,
@@ -146,9 +155,6 @@ begin
     );
 
     PCNext_mux : entity work.mux2
-    generic map (
-        dataWIDTH => 16
-    )
     port map (
         d0 => PCPlus4,
         d1 => PCTarget,
@@ -166,35 +172,23 @@ begin
         y => result
     );
 
-    ---Adders
+    --Adders
     PCPlus4_adder : entity work.adder
-    generic map (
-        dInWIDTH => 16
-        dOutWIDTH => 16
-    )
     port map (
-        a => PC,
+        a => PC_with_prefix,
         b => four,
         --
         y => PCPlus4
     );
 
     PCTarget_adder : entity work.adder
-    generic map (
-        dInWIDTH => 16
-        dOutWIDTH => 16
-    )
     port map (
-        a => PC,
+        a => PC_with_prefix,
         b => ImmExt,
         --
         y => PCTarget
     );
 
-end Structural;
-
-
-begin
 
     process(clk)
     begin
@@ -205,5 +199,5 @@ begin
         end if;
     end process;
 
-end behavioral;
+end Behavioral;
 

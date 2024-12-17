@@ -14,24 +14,25 @@ entity immextender is
     );
 end immextender;
 
-architecture Behavioral of iextender is
+architecture Behavioral of immextender is
 
 begin
-    process(immSrc)
+    process(immSrc, extType, instr)
+    begin
         case immSrc is
-            when '00' => --I
+            when "00" => -- I-type
                 if extType = '0' then
-                    immExt <= (others => instr(31)) & instr(31:20); 
-                elsif extType = '1' then
-                    immExt <= (others => '0') & instr(31:20);
+                    immExt <= (31 downto 12 => instr(31)) & instr(31 downto 20); 
+                else
+                    immExt <= (31 downto 12 => '0') & instr(31 downto 20);
                 end if;
-            when '01' => --S
-                immExt <= (others => instr(31)) & instr(31:25) & instr(11:7);
-            when '10' => --B
-                immExt <= (others => instr(31)) & instr(7) & instr(30:25) & instr(11:8) & instr(11:8) & '0';
-            when '11' => --J
-                immExt <= (others => instr(31)) & instr(19:12) & instr(20) & instr(30:21) & '0';
+            when "01" => -- S-type
+                immExt <= (31 downto 12 => instr(31)) & instr(31 downto 25) & instr(11 downto 7);
+            when "10" => -- B-type
+                immExt <= (31 downto 12 => instr(31)) & instr(7) & instr(30 downto 25) & instr(11 downto 8) & '0';
+            when "11" => -- J-type
+                immExt <= instr(31 downto 20) & instr(19 downto 12) & instr(20) & instr(30 downto 21) & '0';
         end case;
-end process; 
+    end process; 
 
 end Behavioral;
