@@ -10,7 +10,7 @@ entity immextender is
         extType: in std_logic; --0, sign.
         immSrc : in std_logic_vector(1 downto 0);
         instr : in std_logic_vector(dataWIDTH - 1 downto 0);
-        immExt : out std_logic_vector(dataWIDTH - 1 downto 0); --
+        immExt : out std_logic_vector(dataWIDTH - 1 downto 0)
     );
 end immextender;
 
