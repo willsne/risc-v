@@ -16,7 +16,7 @@ entity regfile is
       	we3 : in std_logic;
         wd3 : in std_logic_vector(dataWIDTH - 1 downto 0);
         rd1 : out std_logic_vector(dataWIDTH - 1 downto 0);
-        rd2 : out std_logic_vector(dataWIDTH - 1 downto 0);
+        rd2 : out std_logic_vector(dataWIDTH - 1 downto 0)
     );
 end regfile;
 
